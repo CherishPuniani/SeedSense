@@ -1,4 +1,4 @@
-# SFA-Net
+# SeedSense
 
 - This repository uses SFA-Net based image-segmentation architecture to determine areas in which we can sow seeds autonomously.
 
@@ -117,6 +117,7 @@ python prediction.py -c config/loveda/sfanet.py -i /path/to/image -o /path/to/ou
 
 ## Acknowledgement
 
+- [SFA-Net](https://github.com/j2jeong/SFA-Net)
 - [pytorch lightning](https://www.pytorchlightning.ai/)
 - [timm](https://github.com/rwightman/pytorch-image-models)
 - [pytorch-toolbelt](https://github.com/BloodAxe/pytorch-toolbelt)
