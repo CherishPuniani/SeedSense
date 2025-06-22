@@ -6,9 +6,9 @@
 ## Install
 
 ```
-conda create -n noname python=3.8
-conda activate noname
-conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 cudatoolkit=11.3 -c pytorch -c conda-forge
+conda create -n ssenv python=3.11
+conda activate ssenc
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
 pip install -r requirements.txt
 ```
 
