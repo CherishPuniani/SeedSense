@@ -42,7 +42,9 @@ SFA-Net
 │   │   ├── train_val (Merge Train and Val)
 
 ```
-
+<hr>
+<span style="font-size:1.2 em"><b>Note</b>: To access pre-trained models, you can download them from <a href="https://drive.google.com/drive/folders/1rkPqYzauU6ohBEWycomYcYxvHXnV9e1g?usp=drive_link">LoveDA weights</a>. Place the downloaded files in the <code>model_weights</code> directory.</span>
+<hr>
 
 ## Data Preprocessing
 
