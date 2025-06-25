@@ -2,8 +2,8 @@
 
 # Paths
 CONFIG_PATH="config/loveda/sfanet.py"
-INPUT_DIR="/content/drive/MyDrive/test_data"
-OUTPUT_DIR="/content/drive/MyDrive/test_data/results"
+INPUT_DIR="test_images/input_images"
+OUTPUT_DIR="test_images/pred_masks"
 
 # Create output directory if it doesn't exist
 mkdir -p "$OUTPUT_DIR"
@@ -12,7 +12,7 @@ mkdir -p "$OUTPUT_DIR"
 for INPUT_IMAGE in "$INPUT_DIR"/*.jpg; do
     # Get the base filename without extension
     BASENAME=$(basename "$INPUT_IMAGE" .jpeg)
-    OUTPUT_IMAGE="$OUTPUT_DIR/latest_mask_20_resize/mask_new_${BASENAME}"
+    OUTPUT_IMAGE="$OUTPUT_DIR/mask_20_${BASENAME}"
 
     # Run prediction
     echo "Processing $INPUT_IMAGE -> $OUTPUT_IMAGE"

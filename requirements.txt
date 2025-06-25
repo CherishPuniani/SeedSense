@@ -10,3 +10,6 @@ scipy
 matplotlib
 einops
 addict
+pytorch_model_summary
+torchinfo
+torchsummary

@@ -48,9 +48,7 @@ SFA-Net
 
 ## Data Preprocessing
 
-Download Datasets
-
-- [LoveDA](https://codalab.lisn.upsaclay.fr/competitions/421)
+Download Dataset: [LoveDA](https://codalab.lisn.upsaclay.fr/competitions/421)
 
 Configure the folder as shown in 'Folder Structure' above.
 

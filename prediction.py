@@ -13,6 +13,7 @@ import ttach as tta
 
 # Import the model and training class
 from tools.cfg import py2cfg
+import types
 
 
 def label2rgb(mask):
@@ -97,6 +98,25 @@ def calculate_percentage(mask):
   percentages = {cls: (count / total_pixels) * 100 for cls, count in zip(unique_classes, counts)}
   return percentages
 
+
+# def py2cfg(config_path):
+#     """
+#     Load a python config file as a module and return its attributes as an object.
+#     """
+#     import importlib.util
+
+#     config_path = os.path.abspath(config_path)
+#     spec = importlib.util.spec_from_file_location("config", config_path)
+#     config_module = importlib.util.module_from_spec(spec)
+#     spec.loader.exec_module(config_module)
+
+#     # Convert module attributes to a simple object (namespace)
+#     class Config: pass
+#     cfg = Config()
+#     for key in dir(config_module):
+#         if not key.startswith("__"):
+#             setattr(cfg, key, getattr(config_module, key))
+#     return cfg
 
 def main():
     # Parse arguments
