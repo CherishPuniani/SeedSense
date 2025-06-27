@@ -13,7 +13,7 @@ import click
 from train import Supervision_Train
 from tools.cfg import py2cfg
 from tools.stich_mask import stitch_images
-from stiching_images.hex_grid import hex_packed_seed_points
+from tools.hex_grid import hex_packed_seed_points
 
 def label2rgb(mask):
     """Convert label mask to RGB visualization with Building, Road, Water, Forest as one color."""
@@ -30,17 +30,8 @@ def label2rgb(mask):
         mask_rgb[np.all(mask_convert == cls, axis=0)] = [0, 255, 0]
     return mask_rgb
 
-@click.command()
-@click.option('--config_path', required=True, type=click.Path(exists=True), help="Path to config file")
-@click.option('--image_dir', required=True, type=click.Path(exists=True), help="Directory containing input images")
-@click.option('--output_dir', required=True, type=click.Path(), help="Directory to save predicted masks")
-@click.option('--map_csv', required=True, type=click.Path(exists=True), help="CSV file with geo-meta data")
-@click.option('--stitched_output', required=True, type=click.Path(), help="File path to save the stitched mask image")
-@click.option('--hex_output', required=True, type=click.Path(), help="File path to save the hex grid overlay image")
-@click.option('--spacing', default=20, type=int, help="Spacing between seed points for the hex grid")
-@click.option('--device', default="cuda" if torch.cuda.is_available() else "cpu", help="Device to use (cuda/cpu)")
-@click.option('--show', is_flag=True, help="Display images during processing")
-def pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show):
+
+def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show):
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
@@ -113,8 +104,8 @@ def pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_o
         if image_base in meta_df["image_name"].values:
             meta_df.loc[meta_df["image_name"] == image_base, "plantable"] = green_area_percent
         else:
-            meta_df = meta_df.append({"image_name": image_base, "latitude": None, "longitude": None, "plantable": green_area_percent},
-                                     ignore_index=True)
+            new_row = pd.DataFrame({"image_name": [image_base], "latitude": [None], "longitude": [None], "plantable": [green_area_percent]})
+            meta_df = pd.concat([meta_df, new_row], ignore_index=True)
 
         if show:
             plt.figure(figsize=(12, 6))
@@ -141,6 +132,22 @@ def pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_o
     click.echo("Generating hex grid overlay...")
     hex_packed_seed_points(stitched_output, spacing=spacing, output_path=hex_output)
     click.echo(f"Hex grid image saved to: {hex_output}")
+
+
+@click.command()
+@click.option('--config_path', required=True, type=click.Path(exists=True), help="Path to config file")
+@click.option('--image_dir', required=True, type=click.Path(exists=True), help="Directory containing input images")
+@click.option('--output_dir', required=True, type=click.Path(), help="Directory to save predicted masks")
+@click.option('--map_csv', required=True, type=click.Path(exists=True), help="CSV file with geo-meta data")
+@click.option('--stitched_output', required=True, type=click.Path(), help="File path to save the stitched mask image")
+@click.option('--hex_output', required=True, type=click.Path(), help="File path to save the hex grid overlay image")
+@click.option('--spacing', default=20, type=int, help="Spacing between seed points for the hex grid")
+@click.option('--device', default="cuda" if torch.cuda.is_available() else "cpu", help="Device to use (cuda/cpu)")
+@click.option('--show', is_flag=True, help="Display images during processing")
+
+def pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show):
+    """Run the complete plantable area detection pipeline."""
+    run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show)
 
 if __name__ == '__main__':
     pipeline()

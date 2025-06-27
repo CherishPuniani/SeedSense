@@ -27,12 +27,13 @@ def hex_packed_seed_points(image_path, spacing=20, output_path="seed_output.png"
         for col in range(offset, w, spacing):
             if green_mask[row, col] == 1:
                 seed_points.append((col, row))
-                # Save seed points to a file
-                # seed_points_path = output_path.rsplit(".", 1)[0] + "_seed_points.txt"
-                # with open(seed_points_path, "w") as f:
-                #     for x, y in seed_points:
-                #         f.write(f"{x},{y}\n")
-                # print(f"Seed points saved to: {seed_points_path}")
+                
+    # Save seed points to a file
+    seed_points_path = output_path.rsplit(".", 1)[0] + "_seed_points.txt"
+    with open(seed_points_path, "w") as f:
+        for x, y in seed_points:
+            f.write(f"{x},{y}\n")
+    print(f"Seed points saved to: {seed_points_path}")
     print(f"Seed points placed: {len(seed_points)}")
 
     # Draw points

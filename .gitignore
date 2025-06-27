@@ -1,3 +1,7 @@
 *.ckpt
 *jpg
 *.jpeg
+*.png
+*.csv
+*.txt
+*.pyc

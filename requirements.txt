@@ -13,3 +13,7 @@ addict
 pytorch_model_summary
 torchinfo
 torchsummary
+streamlit
+pandas
+pillow
+click
