@@ -6,10 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from torch import nn
 from torchvision import transforms
-
 import click
-
-# Import functions from your project modules
 from train import Supervision_Train
 from tools.cfg import py2cfg
 from tools.stich_mask import stitch_images
@@ -32,10 +29,9 @@ def label2rgb(mask):
 
 
 def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show):
-    # Create output directory if it doesn't exist
+
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load meta CSV for updating plantable (green area) values.
     meta_path = map_csv
     meta_df = pd.read_csv(meta_path)
 
@@ -64,11 +60,9 @@ def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, h
             click.echo(f"Skipping unreadable image: {img_path}")
             continue
 
-        # Convert color and keep original copy for display/resizing later.
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         original_image = image.copy()
 
-        # Resize to target size expected by the model.
         target_size = (1024, 1024)
         resized_image = cv2.resize(image, target_size, interpolation=cv2.INTER_LINEAR)
         image_tensor = transform(resized_image).unsqueeze(0).to(device)
@@ -96,7 +90,7 @@ def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, h
         cv2.imwrite(out_path, cv2.cvtColor(prediction_rgb, cv2.COLOR_RGB2BGR))
         click.echo(f"Saved predicted mask to: {out_path}")
 
-        # Calculate green area percentage (for classes 4 and 6)
+
         green_mask = np.all(prediction_rgb == [0, 255, 0], axis=-1).astype(np.uint8)
         green_area_percent = round(100 * np.sum(green_mask) / green_mask.size, 2)
 
@@ -123,14 +117,12 @@ def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, h
     meta_df.to_csv(meta_path, index=False)
     click.echo(f"Updated meta CSV saved to: {meta_path}")
 
-    # Step 2: Stitch the predicted mask images.
     click.echo("Stitching predicted masks...")
     stitch_images(output_dir, meta_path, stitched_output)
     click.echo(f"Stitched image saved to: {stitched_output}")
 
-    # Step 3: Generate hex grid overlay on the stitched image.
     click.echo("Generating hex grid overlay...")
-    hex_packed_seed_points(stitched_output, spacing=spacing, output_path=hex_output)
+    hex_packed_seed_points(stitched_output,map_csv=meta_path, spacing=spacing, output_path=hex_output)
     click.echo(f"Hex grid image saved to: {hex_output}")
 
 

@@ -30,9 +30,9 @@ def calculate_total_green_area(image_path):
     # Mask for green pixels
     green_mask = np.all(image_rgb == [0, 255, 0], axis=-1).astype(np.uint8)
     # Mask for black pixels
-    black_mask = np.all(image_rgb == [0, 0, 0], axis=-1).astype(np.uint8)
+    white_mask = np.all(image_rgb == [255, 255, 255], axis=-1).astype(np.uint8)
     # Exclude black pixels from total
-    total_pixels = image_rgb.shape[0] * image_rgb.shape[1] - np.sum(black_mask)
+    total_pixels = image_rgb.shape[0] * image_rgb.shape[1] - np.sum(white_mask)
     green_pixels = np.sum(green_mask)
     if total_pixels == 0:
         return 0.0
@@ -53,7 +53,7 @@ def main():
     st.sidebar.header("Configuration")
     spacing = st.sidebar.number_input("Hex Grid Spacing", value=20, step=5)
     device = st.sidebar.selectbox("Device", ["cuda", "cpu"], index=0)
-    model = st.sidebar.selectbox("Model",["No_augmentation", "15% Water_augmentation"])
+    model = st.sidebar.selectbox("Model",["No_augmentation", "10% Water_augmentation","15% Water_augmentation"])
     
 
     col1, col2 = st.columns(2)
@@ -138,9 +138,10 @@ def main():
         hex_output = "data_pred/hex_grid_output.png"
         if model == "No_augmentation":
             config_path = "config/loveda/sfanet_pred_naug.py"
-        else:
+        elif model == "10% Water_augmentation":
+            config_path = "config/loveda/sfanet_pred_aug10.py"
+        elif model == "15% Water_augmentation":
             config_path = "config/loveda/sfanet_pred_aug15.py"
-
 
         uploaded_csv.seek(0)  # Reseting the file pointer
         with open(csv_path, "wb") as f:

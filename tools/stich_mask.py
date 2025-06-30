@@ -6,68 +6,76 @@ import pandas as pd
 import click
 
 
-def stitch_images(mask_image_path, map_csv, output_path):
-    df = pd.read_csv(map_csv)
-    df = df.sort_values(by=['latitude', 'longitude'])
-    df = df.reset_index(drop=True)
+def stitch_images(mask_image_path, map_csv, output_path,scale_factor=1):
+    """Stitch mask images based on geographic coordinates using projection mapping."""
 
-    grouped = df.groupby('latitude')
-    image_matrix = []
-
-    max_row_width = 0  
-    row_heights = []   
-
-    for _, group in grouped:
-        row_images = []
-        max_height = 0
-        max_width = 0
-
-        imgs = []
-        for _, row in group.iterrows():
-            image_path = os.path.join(mask_image_path, row['image_name'] + "_mask.png")
-            img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-            if img is not None:
-                imgs.append(img)
-                max_height = max(max_height, img.shape[0])
-                max_width += img.shape[1]
-                # print(max_width)
-
-        padded_row = []
-        for img in imgs:
-            h, w = img.shape[:2]
-            # Pad image to match max height of the row
-            if h < max_height:
-                pad_height = max_height - h
-                pad = np.zeros((pad_height, w, img.shape[2]) if img.ndim == 3 else (pad_height, w), dtype=img.dtype)
-                img = np.vstack((img, pad))
-            padded_row.append(img)
-
-        if padded_row:
-            row_img = np.hstack(padded_row)
-            image_matrix.append(row_img)
-            row_heights.append(max_height)
-            max_row_width = max(max_row_width, row_img.shape[1])
+    image_ext = '.png'
+    image_size = (1024, 1024) 
     
-    # Pad rows to match max_row_width
-    for i in range(len(image_matrix)):
-        row_img = image_matrix[i]
-        h, w = row_img.shape[:2]
-        if w < max_row_width:
-            pad_width = max_row_width - w
-            if row_img.ndim == 3:
-                pad = np.zeros((h, pad_width, row_img.shape[2]), dtype=row_img.dtype)
-            else:
-                pad = np.zeros((h, pad_width), dtype=row_img.dtype)
-            image_matrix[i] = np.hstack((row_img, pad))
+    # Read CSV
+    df = pd.read_csv(map_csv)
+    coords = list(zip(df['latitude'], df['longitude']))
+    image_names = df['image_name'].tolist()
+    
+    # Reference projection to (x, y) in meters
+    ref_lat, ref_lon = coords[0]
+    
+    def latlon_to_xy(lat, lon, ref_lat, ref_lon):
+        R = 6371000  # Earth radius in meters
+        x = R * np.radians(lon - ref_lon) * np.cos(np.radians(ref_lat))
+        y = R * np.radians(lat - ref_lat)
+        return x, y
+    
+    positions_m = [latlon_to_xy(lat, lon, ref_lat, ref_lon) for lat, lon in coords]
+    
+    s = scale_factor  
 
-    # Stack all rows vertically
-    stitched_image = np.vstack(image_matrix)
+    xs, ys = zip(*positions_m)
+    min_x, min_y = min(xs), min(ys)
+    shifted = [(x - min_x, y - min_y) for x, y in positions_m]
+    
+    # Meters → pixels
+    grid_px = [(dx / s, dy / s) for dx, dy in shifted]
+    
+    gx, gy = zip(*grid_px)
+    canvas_w = int(np.ceil((max(gx) + 1) * image_size[0]))
+    canvas_h = int(np.ceil((max(gy) + 1) * image_size[1]))
+    
+  
+    canvas = np.full((canvas_h, canvas_w, 3), 255, dtype=np.uint8)
+    
+    
+    for name, (px, py) in zip(image_names, grid_px):
+        try:
+            img_path = os.path.join(mask_image_path, f"{name}_mask{image_ext}")
+            img = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+            
+            if img is not None:
+                
+                if img.shape[:2] != (image_size[1], image_size[0]):
+                    img = cv2.resize(img, image_size)
 
+                if len(img.shape) == 2:
+                    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+                elif img.shape[2] == 4:  
+                    img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+  
+                x_int = int(round(px * image_size[0]))
+                y_int = int(round(py * image_size[1]))
 
-    output_path = os.path.join(os.path.dirname(os.path.dirname(mask_image_path)), output_path)
-    # print(output_path)
-    # sys.exit()
-    cv2.imwrite(output_path, stitched_image)
+                if (x_int >= 0 and y_int >= 0 and 
+                    x_int + image_size[0] <= canvas_w and 
+                    y_int + image_size[1] <= canvas_h):
+                    
+                    canvas[y_int:y_int + image_size[1], 
+                           x_int:x_int + image_size[0]] = img
+                
+        except Exception as e:
+            print(f"Warning: failed to load {name}: {e}")
+
+    full_output_path = os.path.join(os.path.dirname(os.path.dirname(mask_image_path)), output_path)
+    cv2.imwrite(full_output_path, canvas)
+    print(f"✅ Saved stitched map to {full_output_path}")
 
 @click.command()
 @click.argument("mask_image_path", type=click.Path(exists=True, file_okay=False)) 
