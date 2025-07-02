@@ -40,7 +40,7 @@ def download_weights_from_gdrive(gdrive_file_id, local_weights_path="model_weigh
     
     gdrive_url = f"https://drive.google.com/uc?id={gdrive_file_id}"
     gdown.download(gdrive_url, local_weights_path, quiet=False)
-    https://drive.google.com/drive/folders?usp=sharing
+
     if os.path.exists(local_weights_path):
         click.echo("Successfully downloaded weights from Google Drive")
         return local_weights_path
