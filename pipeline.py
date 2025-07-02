@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from torch import nn
 from torchvision import transforms
 import click
+import gdown  # Add this import for Google Drive downloads
 from train import Supervision_Train
 from tools.cfg import py2cfg
 from tools.stich_mask import stitch_images
@@ -28,7 +29,25 @@ def label2rgb(mask):
     return mask_rgb
 
 
-def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show):
+def download_weights_from_gdrive(gdrive_file_id, local_weights_path="model_weights"):
+    """Download model weights from Google Drive if they don't exist locally."""
+    if os.path.exists(local_weights_path):
+        click.echo(f"Weights already exist at: {local_weights_path}")
+        return local_weights_path
+    
+    click.echo(f"Downloading weights from Google Drive to: {local_weights_path}")
+    os.makedirs(os.path.dirname(local_weights_path), exist_ok=True)
+    
+    gdrive_url = f"https://drive.google.com/uc?id={gdrive_file_id}"
+    gdown.download(gdrive_url, local_weights_path, quiet=False)
+    https://drive.google.com/drive/folders?usp=sharing
+    if os.path.exists(local_weights_path):
+        click.echo("Successfully downloaded weights from Google Drive")
+        return local_weights_path
+    else:
+        raise FileNotFoundError("Failed to download weights from Google Drive")
+
+def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show, gdrive_file_id="1-oz6q723IljvUGO0rTDsC3QjJYdbPdOk"):
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -38,6 +57,11 @@ def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, h
     click.echo("Loading configuration and model...")
     config = py2cfg(config_path)
     model_ckpt = os.path.join(config.weights_path, config.test_weights_name + '.ckpt')
+    
+    # Download weights from Google Drive if they don't exist locally
+    if gdrive_file_id and not os.path.exists(model_ckpt):
+        model_ckpt = download_weights_from_gdrive(gdrive_file_id, model_ckpt)
+    
     click.echo(f"Loading model from: {model_ckpt}")
     model = Supervision_Train.load_from_checkpoint(model_ckpt, config=config)
     model.to(device)
@@ -136,10 +160,10 @@ def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, h
 @click.option('--spacing', default=20, type=int, help="Spacing between seed points for the hex grid")
 @click.option('--device', default="cuda" if torch.cuda.is_available() else "cpu", help="Device to use (cuda/cpu)")
 @click.option('--show', is_flag=True, help="Display images during processing")
-
-def pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show):
+@click.option('--gdrive_file_id', default=None, help="Google Drive file ID for model weights")
+def pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show, gdrive_file_id):
     """Run the complete plantable area detection pipeline."""
-    run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show)
+    run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show, gdrive_file_id)
 
 if __name__ == '__main__':
     pipeline()
