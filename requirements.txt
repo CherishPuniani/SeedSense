@@ -5,7 +5,7 @@ albumentations
 ttach
 numpy
 tqdm
-opencv-python
+opencv-python-headless
 scipy
 matplotlib
 einops
