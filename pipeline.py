@@ -51,6 +51,9 @@ def download_weights_from_gdrive(gdrive_file_id, local_weights_path="model_weigh
                 zip_ref.extractall(os.path.dirname(local_weights_path))
             os.remove(zip_path)  # Clean up the zip file after extraction
             click.echo(f"Successfully extracted weights to: {local_weights_path}")
+            for file_info in zip_ref.infolist():
+                extracted_path = os.path.join(os.path.dirname(local_weights_path), file_info.filename)
+                print(f"Extracted: {extracted_path}")
         else:
             os.rename(zip_path, local_weights_path)  # Rename if it's not a zip file
             click.echo("Downloaded file is not a zip archive. Saved directly.")
@@ -72,6 +75,7 @@ def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, h
         print("Model weights not found locally. Downloading from Google Drive...")
         download_weights_from_gdrive(gdrive_file_id)
 
+    click.echo(f"Current working directory: {os.getcwd()}")
     model_ckpt = os.path.join(config.weights_path, config.test_weights_name + '.ckpt')
     click.echo(f"Loading model from: {model_ckpt}")
     model = Supervision_Train.load_from_checkpoint(model_ckpt, config=config)
