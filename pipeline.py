@@ -12,6 +12,7 @@ from train import Supervision_Train
 from tools.cfg import py2cfg
 from tools.stich_mask import stitch_images
 from tools.hex_grid import hex_packed_seed_points
+import zipfile
 
 def label2rgb(mask):
     """Convert label mask to RGB visualization with Building, Road, Water, Forest as one color."""
@@ -29,8 +30,8 @@ def label2rgb(mask):
     return mask_rgb
 
 
-def download_weights_from_gdrive(gdrive_file_id, local_weights_path="model_weights"):
-    """Download model weights from Google Drive if they don't exist locally."""
+def download_weights_from_gdrive(gdrive_file_id, local_weights_path="model_weights/loveda"):
+    """Download model weights from Google Drive and handle zip extraction if necessary."""
     if os.path.exists(local_weights_path):
         click.echo(f"Weights already exist at: {local_weights_path}")
         return local_weights_path
@@ -39,15 +40,27 @@ def download_weights_from_gdrive(gdrive_file_id, local_weights_path="model_weigh
     os.makedirs(os.path.dirname(local_weights_path), exist_ok=True)
     
     gdrive_url = f"https://drive.google.com/uc?id={gdrive_file_id}"
-    gdown.download(gdrive_url, local_weights_path, quiet=False)
+    zip_path = local_weights_path + ".zip"  # Temporary path for the zip file
+    gdown.download(gdrive_url, zip_path, quiet=False)
+
+    if os.path.exists(zip_path):
+        # Check if the downloaded file is a zip archive
+        if zipfile.is_zipfile(zip_path):
+            click.echo("Extracting zip file...")
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(os.path.dirname(local_weights_path))
+            os.remove(zip_path)  # Clean up the zip file after extraction
+            click.echo(f"Successfully extracted weights to: {local_weights_path}")
+        else:
+            os.rename(zip_path, local_weights_path)  # Rename if it's not a zip file
+            click.echo("Downloaded file is not a zip archive. Saved directly.")
 
     if os.path.exists(local_weights_path):
-        click.echo("Successfully downloaded weights from Google Drive")
         return local_weights_path
     else:
-        raise FileNotFoundError("Failed to download weights from Google Drive")
+        raise FileNotFoundError("Failed to download or extract weights from Google Drive")
 
-def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show, gdrive_file_id="1-oz6q723IljvUGO0rTDsC3QjJYdbPdOk"):
+def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, hex_output, spacing, device, show, gdrive_file_id="1yBD27mCj8Nh3-GI7BLefr5zG2yCe9XPv"):
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -60,7 +73,7 @@ def run_pipeline(config_path, image_dir, output_dir, map_csv, stitched_output, h
     
     # Download weights from Google Drive if they don't exist locally
     if gdrive_file_id and not os.path.exists(model_ckpt):
-        model_ckpt = download_weights_from_gdrive(gdrive_file_id, model_ckpt)
+        model_ckpt = download_weights_from_gdrive(gdrive_file_id)
     
     click.echo(f"Loading model from: {model_ckpt}")
     model = Supervision_Train.load_from_checkpoint(model_ckpt, config=config)
