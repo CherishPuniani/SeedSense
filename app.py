@@ -171,7 +171,17 @@ def main():
             device=device,
             show=False
         )
-        
+        progress_bar.progress(0.6)
+        seed_txt_file = os.path.splitext(hex_output)[0] + "_seed_points.txt"
+        if os.path.exists(seed_txt_file):
+            with open(seed_txt_file, "rb") as f:
+                st.download_button(
+                    label="Download Hex Grid Seed Points",
+                    data=f,
+                    file_name=os.path.basename(seed_txt_file),
+                    mime="text/plain"
+                )
+
         pipeline_success = os.path.isfile(stitched_output) and os.path.isfile(hex_output)
 
         
