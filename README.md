@@ -1,6 +1,7 @@
 # SeedSense
 
 - This repository uses SFA-Net based image-segmentation architecture to determine areas in which we can sow seeds autonomously.
+- Try this project for yourself: [Working demo](https://seedsense.streamlit.app/)
 
 ## Install
 
