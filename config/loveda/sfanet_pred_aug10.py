@@ -9,7 +9,7 @@ classes = CLASSES
 
 # Paths for loading weights and logging
 weights_name = "sfanet_aug_10"
-weights_path = "model_weights/loveda/{}".format(weights_name)
+weights_path = "model_weights/{}".format(weights_name)
 test_weights_name = "sfanet"
 log_name = 'loveda/{}'.format(weights_name)
 

@@ -8,7 +8,7 @@ num_classes = len(CLASSES)
 classes = CLASSES
 
 weights_name = "sfanet_v2"
-weights_path = "model_weights/loveda/{}".format(weights_name)
+weights_path = "model_weights/{}".format(weights_name)
 test_weights_name = "sfanet"
 log_name = 'loveda/{}'.format(weights_name)
 
